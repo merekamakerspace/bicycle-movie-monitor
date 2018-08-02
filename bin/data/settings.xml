@@ -1,0 +1,6 @@
+<settings>
+    <serialPort>/dev/ttyACM0</serialPort>
+    <videoFile>movies/singingplants.mp4</videoFile>
+    <lowThres>300</lowThres>
+    <highThres>750</highThres>
+</settings>

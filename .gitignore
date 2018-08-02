@@ -1,0 +1,4 @@
+bin/battery-level
+bin/data/movies
+arduino/build-uno
+obj/
