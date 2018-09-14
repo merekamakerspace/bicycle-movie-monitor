@@ -1,53 +1,75 @@
-#define ADC_PIN A0
-#define NUM_VALS 30
+#include "bb_Generator.h"
+#include "FastLED.h"
 
-int val;
+#define NUM_LEDS 10
 
-int prevVal = 0;
 
-int outputPin = 8;
+#define BB_5V 2
+#define BB_14V 3
+
+#define LED_PIN 4
+
+CRGB leds[NUM_LEDS];
+
+
+bb_Generator cap(A0);
+bb_Generator battery(A1);
+//bb_Generator bike1(A2);
+//bb_Generator bike2(A3);
 
 bool outOn = false;
 
-int sum = 0;
-int vals[NUM_VALS];
-int index = 0;
-
 void setup() {
+
+	pinMode(BB_5V, OUTPUT);
+	pinMode(BB_14V, OUTPUT);
+
+	digitalWrite(BB_5V, LOW);
+	digitalWrite(BB_14V, LOW);
+
+	cap.setNumReadings(30);
+	cap.setEnergyDecrement(0);
+	cap.setDiff(2);
+	cap.setLowCutoff(0);
+	cap.begin();
+
+
+	battery.setLowCutoff(0);
+	battery.begin();
+
+	FastLED.addLeds<WS2812, LED_PIN, RGB>(leds, NUM_LEDS);
+
+
 	Serial.begin(115200);
-	pinMode(outputPin, OUTPUT);
-	digitalWrite(outputPin, LOW);
-	for(int i = 0; i < NUM_VALS; i++){
-		vals[i] = 0;
-	}
+	Serial.println("s,");
+
 }
 
 void loop() {
-	vals[index] = analogRead(ADC_PIN);
-	index++;
-	if(index >= NUM_VALS){
-		index = 0;
-	}
-	sum = 0;
-	for(int i = 0; i < NUM_VALS; i++){
-		sum += vals[i];
-	}
-	val = sum / NUM_VALS;
 
-	if (abs(prevVal - val) > 2) {
-		//int sendVal = map(val, 300, 750, 0, 1023);
-		//sendVal = constrain(sendVal, 0, 1023);
-		Serial.println(val);
-		prevVal = val;
-		if (val > 360 && !outOn) {
-			digitalWrite(outputPin, HIGH);
+	cap.update();
+	battery.update();
+
+	if (cap.getVoltage() > 5) {
+		digitalWrite(BB_5V, HIGH);
+	}
+	if (cap.getVoltage() < 4.5) {
+		digitalWrite(BB_5V, LOW);
+	}
+
+	if(cap.hasChanged()){
+		Serial.print("c,");
+		Serial.println(cap.getVoltage());
+		if(cap.getVoltage() > 9.8 && !outOn){
+			digitalWrite(BB_14V, HIGH);
 			outOn = true;
 		}
-		if (val < 300 && outOn)
-		{
-			digitalWrite(outputPin, LOW);
+		if(cap.getVoltage() < 5 && outOn){
+			digitalWrite(BB_14V, LOW);
 			outOn = false;
-		}
+		} 
+
+		
 	}
 	delay(30);
 

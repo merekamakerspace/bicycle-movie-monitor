@@ -8,7 +8,7 @@
 #   The location of your root openFrameworks installation
 #       (default) OF_ROOT = ../../.. 
 ################################################################################OF_ROOT = /home/roh/of
-OF_ROOT = /home/pi/of
+OF_ROOT = /home/roh/of
 
 ################################################################################
 # PROJECT ROOT
@@ -61,7 +61,7 @@ OF_ROOT = /home/pi/of
 #
 #   Note: Leave a leading space when adding list items with the += operator
 ################################################################################
-# PROJECT_EXCLUSIONS =
+PROJECT_EXCLUSIONS = $(PROJECT_ROOT)/arduino
 
 ################################################################################
 # PROJECT LINKER FLAGS

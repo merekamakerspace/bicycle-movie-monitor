@@ -1,4 +1,5 @@
-bin/battery-level
+bin/bicycle-movie-monitor
 bin/data/movies
+bin/libs/
 arduino/build-uno
 obj/

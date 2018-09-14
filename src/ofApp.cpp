@@ -7,7 +7,7 @@ void ofApp::setup() {
 	settings.loadFile("settings.xml");
 	string serialPort = settings.getValue("settings:serialPort", "/dev/ttyACM0");
 	string videoFile = settings.getValue("settings:videoFile", "osce.mp4");
-	
+
 	lowThres = settings.getValue("settings:lowThres", 300);
 	highThres = settings.getValue("settings:highThres", 600);
 
@@ -21,7 +21,7 @@ void ofApp::setup() {
 	myPlayer.load(videoFile);
 	myPlayer.setLoopState(OF_LOOP_NONE);
 	myPlayer.setVolume(0.8);
-	
+
 	//charged = true;
 	//myPlayer.setPaused(true);
 }
@@ -31,19 +31,19 @@ void ofApp::update() {
 	myPlayer.update();
 }
 
-void ofApp::showVideo(){
-	myPlayer.draw(0,0, ofGetWidth(), ofGetHeight());
-	
-	if(myPlayer.getIsMovieDone()){
+void ofApp::showVideo() {
+	myPlayer.draw(0, 0, ofGetWidth(), ofGetHeight());
+
+	if (myPlayer.getIsMovieDone()) {
 		charged = false;
 	}
 }
 
-void ofApp::showBattery(){
+void ofApp::showBattery() {
 	//noFill();
 	//float cnr = 25;
 	//myPlayer.draw(20,20);
-	ofPushStyle(); 
+	ofPushStyle();
 	float level = ofMap(val, 0, 100, 0, 600);
 	ofSetColor(255, 255, 255);
 	ofDrawRectangle(700, 250, 50, 100);
@@ -73,44 +73,53 @@ void ofApp::showBattery(){
 	myfont.drawString(val_str, 350, 320);
 	//textSize(12);
 	//text("received: " + inputStr, 10,50);
-	ofPopStyle(); 
+	ofPopStyle();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-	if(charged){
-		showVideo();	
-	}else{
+	if (charged) {
+		showVideo();
+	} else {
 		showBattery();
 	}
 	//showBattery();
 
-	
+
 	// string val_str = ofToString(int(val)) + "%";
 	// myfont.drawString(val_str, 350, 320);
-	
-	//showBattery();	
+
+	//showBattery();
 
 }
 
 void ofApp::onNewMessage(string & message)
 {
-	val = ofMap(ofToFloat(message), lowThres, highThres, 0, 100);
-	val = ofClamp(val, 0, 100);
+	ofLog()   << "message: " << message;
+	vector<string> tokens = ofSplitString( message, ",");
+	
+	if (tokens[0] == "c") {
 
-	ofLog()   << "message: " << message << " val:" << val;
+		val = ofMap(ofToFloat(tokens[1]), lowThres, highThres, 0, 100);
+		val = ofClamp(val, 0, 100);
 
-	if(val > 99 && !charged){
-		charged = true;
-		myPlayer.setPosition(0);
-		myPlayer.play();
-		ofLog() << "playing";
-		
+		ofLog() << "cap val:" << val;
+
+		if (val > 99 && !charged) {
+			charged = true;
+			myPlayer.setPosition(0);
+			myPlayer.play();
+			ofLog() << "playing";
+
+		}
+
+		if (val < 20 && charged) {
+			charged = false;
+			myPlayer.stop();
+		}
+
 	}
 
-	if(val < 20 && charged){
-		charged = false;
-		myPlayer.stop();
-	}
 
 }
+
