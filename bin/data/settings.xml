@@ -1,6 +1,6 @@
 <settings>
     <serialPort>/dev/ttyACM0</serialPort>
-    <videoFile>movies/osce.mp4</videoFile>
-    <lowThres>0</lowThres>
-    <highThres>10</highThres>
+    <videoFile>movies/singingplants.mp4</videoFile>
+    <lowThres>4</lowThres>
+    <highThres>11</highThres>
 </settings>

@@ -8,7 +8,7 @@
 #   The location of your root openFrameworks installation
 #       (default) OF_ROOT = ../../.. 
 ################################################################################OF_ROOT = /home/roh/of
-OF_ROOT = /home/roh/of
+OF_ROOT = /home/pi/of
 
 ################################################################################
 # PROJECT ROOT

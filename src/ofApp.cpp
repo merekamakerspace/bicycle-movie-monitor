@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
 	ofBackground(52);
-
+	ofHideCursor();
 	settings.loadFile("settings.xml");
 	string serialPort = settings.getValue("settings:serialPort", "/dev/ttyACM0");
 	string videoFile = settings.getValue("settings:videoFile", "osce.mp4");
