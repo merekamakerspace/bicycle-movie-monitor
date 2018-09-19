@@ -1,79 +1,94 @@
 #include "ofApp.h"
 
+bool doLoadNextMovie = false;
+
+void ofApp::onVideoEnd(ofxOMXPlayerListenerEventData& e)
+{
+	ofLogVerbose(__func__) << " RECEIVED";
+	doLoadNextMovie = true;
+	ofLog() << "Video Stopped";
+	charged = false;
+
+}
+
+
+
+
 //--------------------------------------------------------------
 void ofApp::setup() {
-	ofBackground(52);
+	ofBackground(0);
 	ofHideCursor();
 	settings.loadFile("settings.xml");
 	string serialPort = settings.getValue("settings:serialPort", "/dev/ttyACM0");
-	string videoFile = settings.getValue("settings:videoFile", "osce.mp4");
+	string videoDirectory = settings.getValue("settings:videoDirectory", "movies");
 
-	lowThres = settings.getValue("settings:lowThres", 300);
-	highThres = settings.getValue("settings:highThres", 600);
+	lowThres = settings.getValue("settings:lowThres", 4);
+	highThres = settings.getValue("settings:highThres", 10);
 
 
-	ofSetWindowTitle("Battery Level");
+	ofSetWindowTitle("Bicycle Cinema");
 	serial.setup(serialPort, 115200);
 	serial.startContinuousRead();
 	ofAddListener(serial.NEW_MESSAGE, this, &ofApp::onNewMessage);
 	myfont.load("arial.ttf", 70);
 
-	myPlayer.load(videoFile);
-	myPlayer.setLoopState(OF_LOOP_NONE);
-	myPlayer.setVolume(0.8);
+	ofDirectory currentVideoDirectory(ofToDataPath(videoDirectory, true));
 
-	//charged = true;
-	//myPlayer.setPaused(true);
+	for (int i = 0; i < currentVideoDirectory.size(); i++) {
+		ofLog() << (currentVideoDirectory.getPath(i));
+	}
+
+	if (currentVideoDirectory.exists())
+	{
+		currentVideoDirectory.listDir();
+		currentVideoDirectory.sort();
+		files = currentVideoDirectory.getFiles();
+		if (files.size() > 0)
+		{
+			videoCounter = 0;
+			pSettings.videoPath = files[videoCounter].path();
+			pSettings.useHDMIForAudio = true;	//default true
+			pSettings.enableLooping = false;		//default true
+			pSettings.enableTexture = true;		//default true
+			pSettings.listener = this;			//this app extends ofxOMXPlayerListener so it will receive events ;
+			omxPlayer.setup(pSettings);
+		}
+	}
+
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-	myPlayer.update();
+
 }
 
-void ofApp::showVideo() {
-	myPlayer.draw(0, 0, ofGetWidth(), ofGetHeight());
-
-	if (myPlayer.getIsMovieDone()) {
-		charged = false;
+void ofApp::loadNextMovie()
+{
+	if (videoCounter + 1 < files.size())
+	{
+		videoCounter++;
+	} else
+	{
+		videoCounter = 0;
 	}
+	//skipTimeStart = ofGetElapsedTimeMillis();
+	omxPlayer.loadMovie(files[videoCounter].path());
+	//skipTimeEnd = ofGetElapsedTimeMillis();
+	//amountSkipped = skipTimeEnd - skipTimeStart;
+	//totalAmountSkipped += amountSkipped;
+	doLoadNextMovie = false;
+}
+
+
+void ofApp::showVideo() {
+	if (!omxPlayer.isTextureEnabled()) return;
+
+	omxPlayer.draw(0, 0, ofGetWidth(), ofGetHeight());
+
 }
 
 void ofApp::showBattery() {
-	//noFill();
-	//float cnr = 25;
-	//myPlayer.draw(20,20);
-	ofPushStyle();
-	float level = ofMap(val, 0, 100, 0, 600);
-	ofSetColor(255, 255, 255);
-	ofDrawRectangle(700, 250, 50, 100);
-
-	//fill(255);
-
-	ofFill();
-	ofDrawRectangle(100, 100, 600, 400 ); //, cnr, cnr, cnr, cnr);
-	//ofNoFill();
-	//noStroke();
-	//ofFill();
-	if (val > 5) {
-		ofSetColor(0, 200, 0);
-		ofDrawRectangle(100, 100, level, 400);//, cnr, cnr, cnr, cnr);
-	}
-	if (val > 97) {
-		ofSetColor(0, 200, 0);
-		ofDrawRectangle(100, 100, 600, 400 );
-		ofDrawRectangle(700, 250, 50, 100);
-
-		//fill(0, 200, 0);
-	}
-
-	//textSize(70);
-	ofSetColor(0);
-	string val_str = ofToString(int(val)) + "%";
-	myfont.drawString(val_str, 350, 320);
-	//textSize(12);
-	//text("received: " + inputStr, 10,50);
-	ofPopStyle();
+	ofBackground(0);
 }
 
 //--------------------------------------------------------------
@@ -83,13 +98,6 @@ void ofApp::draw() {
 	} else {
 		showBattery();
 	}
-	//showBattery();
-
-
-	// string val_str = ofToString(int(val)) + "%";
-	// myfont.drawString(val_str, 350, 320);
-
-	//showBattery();
 
 }
 
@@ -97,7 +105,7 @@ void ofApp::onNewMessage(string & message)
 {
 	ofLog()   << "message: " << message;
 	vector<string> tokens = ofSplitString( message, ",");
-	
+
 	if (tokens[0] == "c") {
 
 		val = ofMap(ofToFloat(tokens[1]), lowThres, highThres, 0, 100);
@@ -107,15 +115,15 @@ void ofApp::onNewMessage(string & message)
 
 		if (val > 99 && !charged) {
 			charged = true;
-			myPlayer.setPosition(0);
-			myPlayer.play();
+			loadNextMovie();
 			ofLog() << "playing";
 
 		}
 
 		if (val < 20 && charged) {
 			charged = false;
-			myPlayer.stop();
+			omxPlayer.setPaused(true);
+			//myPlayer.stop();
 		}
 
 	}
